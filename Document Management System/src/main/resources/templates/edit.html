@@ -1,0 +1,723 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>แก้ไขเอกสาร - Document Editor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+
+        .document-info {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            border-left: 5px solid #e74c3c;
+            height: fit-content;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 15px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            color: #34495e;
+        }
+
+        .edit-section {
+            background: #fff;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e74c3c;
+            box-shadow: 0 10px 30px rgba(231, 76, 60, 0.1);
+        }
+
+        .edit-section h3 {
+            color: #e74c3c;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .document-preview {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .edit-commands {
+            margin-bottom: 30px;
+        }
+
+        .command-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e74c3c;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 120px;
+            font-family: inherit;
+        }
+
+        .command-input:focus {
+            outline: none;
+            border-color: #c0392b;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.2);
+        }
+
+        .quick-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-cmd {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 10px 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .quick-cmd:hover {
+            background: #ffeaa7;
+            transform: translateY(-2px);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #95a5a6, #7f8c8d);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(149, 165, 166, 0.3);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #fff3cd;
+            color: #856404;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .edit-history {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 30px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .edit-history h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .history-item {
+            background: white;
+            border-left: 4px solid #e74c3c;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+        }
+
+        .history-time {
+            color: #7f8c8d;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success {
+            background: #2ecc71;
+        }
+
+        .notification.error {
+            background: #e74c3c;
+        }
+
+        .notification.info {
+            background: #3498db;
+        }
+
+        .footer {
+            background: #2c3e50;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .quick-commands {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .debug-console {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 300px;
+            height: 200px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-y: auto;
+            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .debug-console h4 {
+            margin: 0 0 10px 0;
+            color: #e74c3c;
+        }
+        
+        .debug-console .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+            border-bottom: 1px solid #34495e;
+        }
+        
+        .debug-console .log-entry.success {
+            color: #2ecc71;
+        }
+        
+        .debug-console .log-entry.error {
+            color: #e74c3c;
+        }
+        
+        .debug-console .log-entry.info {
+            color: #f39c12;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 แก้ไขเอกสาร</h1>
+            <p>ระบบแก้ไขเอกสารออนไลน์แบบ Real-time</p>
+        </div>
+
+        <div class="content">
+            <div class="document-info">
+                <div class="info-row">
+                    <span class="info-label">📄 รหัสเอกสาร:</span>
+                    <span class="info-value">DOC-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">👤 ผู้ขอแก้ไข:</span>
+                    <span class="info-value">สมชาย วิทยากร (ID: 1)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">✏️ ผู้แก้ไข:</span>
+                    <span class="info-value">สมชาย วิทยากร (ID: 1)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📅 วันที่สร้าง:</span>
+                    <span class="info-value">4 มิถุนายน 2568</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">⏰ แก้ไขล่าสุด:</span>
+                    <span class="info-value" id="lastEditTime">ยังไม่มีการแก้ไข</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">📊 สถานะ:</span>
+                    <span class="status-badge" id="docStatus">พร้อมแก้ไข</span>
+                </div>
+
+                <div class="edit-history">
+                    <h4>📈 ประวัติการแก้ไข</h4>
+                    <div id="historyList">
+                        <div class="history-item">
+                            สร้างเอกสารใหม่
+                            <div class="history-time">4 มิถุนายน 2568 14:30</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <h3>✍️ แก้ไขเอกสาร</h3>
+                
+                <div class="document-preview" id="docPreview">
+สัญญาความร่วมมือทางธุรกิจ
+
+เรื่อง: ข้อตกลงความร่วมมือ
+วันที่: 4 มิถุนายน 2568
+
+คู่สัญญา:
+ผู้ให้บริการ: บริษัท ABC จำกัด
+ผู้รับบริการ: นายสมศักดิ์ ใจดี
+
+รายละเอียดการให้บริการ:
+1. การให้คำปรึกษาทางธุรกิจ
+2. การพัฒนาระบบสารสนเทศ
+3. การฝึกอบรมพนักงาน
+
+ระยะเวลา: 12 เดือน
+มูลค่าสัญญา: 500,000 บาท
+
+ลงชื่อ:
+(________________)
+ผู้แทนบริษัท ABC จำกัด
+                </div>
+
+                <div class="edit-commands">
+                    <label for="editCommand" style="display: block; margin-bottom: 10px; font-weight: 600; color: #2c3e50;">
+                        💬 คำสั่งแก้ไข:
+                    </label>
+                    
+                    <div class="quick-commands">
+                        <div class="quick-cmd" onclick="setQuickCommand('เปลี่ยนชื่อผู้รับเป็น นายสมชาย ใจดี')">
+                            🔄 เปลี่ยนชื่อผู้รับ
+                        </div>
+                        <div class="quick-cmd" onclick="setQuickCommand('เปลี่ยนมูลค่าสัญญาเป็น 750,000 บาท')">
+                            💰 เปลี่ยนมูลค่าสัญญา
+                        </div>
+                        <div class="quick-cmd" onclick="setQuickCommand('เปลี่ยนระยะเวลาเป็น 18 เดือน')">
+                            📅 เปลี่ยนระยะเวลา
+                        </div>
+                        <div class="quick-cmd" onclick="setQuickCommand('เพิ่มข้อกำหนดการชำระเงิน')">
+                            📋 เพิ่มข้อกำหนด
+                        </div>
+                        <div class="quick-cmd" onclick="setQuickCommand('แก้ไขที่อยู่บริษัท')">
+                            🏢 แก้ไขที่อยู่
+                        </div>
+                        <div class="quick-cmd" onclick="setQuickCommand('เพิ่มเงื่อนไขการยกเลิกสัญญา')">
+                            ⚖️ เพิ่มเงื่อนไข
+                        </div>
+                    </div>
+
+                    <textarea 
+                        id="editCommand" 
+                        class="command-input" 
+                        placeholder="พิมพ์คำสั่งแก้ไขของคุณที่นี่...&#10;&#10;ตัวอย่าง:&#10;- เปลี่ยนชื่อผู้รับเป็น นายสมชาย ใจดี&#10;- เปลี่ยนมูลค่าสัญญาเป็น 750,000 บาท&#10;- เพิ่มข้อกำหนดการชำระเงิน&#10;- แก้ไขวันที่เป็น 15 มิถุนายน 2568"
+                    >เปลี่ยนชื่อผู้รับเป็น นายสมชาย ใจดี</textarea>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-secondary" onclick="previewEdit()">
+                        👁️ ดูตัวอย่าง
+                    </button>
+                    <button class="btn btn-success" onclick="saveAsDraft()">
+                        💾 บันทึกร่าง
+                    </button>
+                    <button class="btn btn-primary" onclick="submitEdit()">
+                        🚀 ส่งคำสั่งแก้ไข
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🔧 ระบบแก้ไขเอกสาร | รองรับคำสั่งภาษาไทยและอังกฤษ</p>
+            <p>© 2025 Document Editor Pro. สงวนสิทธิ์ทุกประการ.</p>
+        </div>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <!-- Debug Console -->
+    <div class="debug-console" id="debugConsole">
+        <h4>🔧 Debug Console</h4>
+        <div id="debugLogs"></div>
+    </div>
+
+    <script>
+        let editHistory = [];
+
+        // Debug logging function
+        function debugLog(message, type = 'info') {
+            const debugLogs = document.getElementById('debugLogs');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            debugLogs.appendChild(logEntry);
+            debugLogs.scrollTop = debugLogs.scrollHeight;
+            
+            // Keep only last 20 entries
+            if (debugLogs.children.length > 20) {
+                debugLogs.removeChild(debugLogs.firstChild);
+            }
+        }
+
+        // Override console functions
+        const originalLog = console.log;
+        console.log = function(...args) {
+            debugLog(args.join(' '), 'info');
+            originalLog.apply(console, args);
+        };
+
+        const originalError = console.error;
+        console.error = function(...args) {
+            debugLog(args.join(' '), 'error');
+            originalError.apply(console, args);
+        };
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 4000);
+        }
+
+        function setQuickCommand(command) {
+            document.getElementById('editCommand').value = command;
+            showNotification('📝 คำสั่งถูกเลือกแล้ว', 'info');
+        }
+
+        function updateLastEditTime() {
+            const timeElement = document.getElementById('lastEditTime');
+            timeElement.textContent = new Date().toLocaleString('th-TH', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function addToHistory(action) {
+            const historyList = document.getElementById('historyList');
+            const historyItem = document.createElement('div');
+            historyItem.className = 'history-item';
+            historyItem.innerHTML = `
+                ${action}
+                <div class="history-time">${new Date().toLocaleString('th-TH')}</div>
+            `;
+            historyList.insertBefore(historyItem, historyList.firstChild);
+            
+            // Keep only last 10 history items
+            if (historyList.children.length > 10) {
+                historyList.removeChild(historyList.lastChild);
+            }
+        }
+
+        async function submitEdit() {
+            const editCommand = document.getElementById('editCommand').value.trim();
+            
+            if (!editCommand) {
+                showNotification('⚠️ กรุณาใส่คำสั่งแก้ไขก่อน', 'error');
+                return;
+            }
+
+            if (confirm('คุณแน่ใจหรือไม่ที่จะส่งคำสั่งแก้ไขนี้?')) {
+                showNotification('🔄 กำลังส่งคำสั่งแก้ไขไปยังเซิร์ฟเวอร์...', 'info');
+                
+                const editData = {
+                    requesterId: 1,
+                    editorId: 1,
+                    documentId: 1,
+                    editCommand: editCommand
+                };
+
+                debugLog(`Sending edit request: ${JSON.stringify(editData)}`, 'info');
+
+                try {
+                    const response = await fetch('http://localhost:8080/api/edit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(editData)
+                    });
+                    
+                    debugLog(`API Response Status: ${response.status}`, 'info');
+                    
+                    if (response.ok) {
+                        const result = await response.json();
+                        debugLog(`API Response Data: ${JSON.stringify(result)}`, 'success');
+                        
+                        showNotification('✅ คำสั่งแก้ไขถูกส่งเรียบร้อยแล้ว!', 'success');
+                        
+                        // Update UI
+                        updateLastEditTime();
+                        addToHistory(`แก้ไข: ${editCommand}`);
+                        
+                        const statusBadge = document.getElementById('docStatus');
+                        statusBadge.textContent = 'กำลังประมวลผล';
+                        statusBadge.style.background = '#fff3cd';
+                        statusBadge.style.color = '#856404';
+                        
+                        // Clear the command input
+                        document.getElementById('editCommand').value = '';
+                        
+                        // Show success message after delay
+                        setTimeout(() => {
+                            showNotification('📧 ส่งการแจ้งเตือนไปยังผู้เกี่ยวข้องแล้ว', 'success');
+                            statusBadge.textContent = 'แก้ไขเสร็จสิ้น';
+                            statusBadge.style.background = '#d4edda';
+                            statusBadge.style.color = '#155724';
+                        }, 2000);
+                        
+                    } else {
+                        const errorText = await response.text();
+                        debugLog(`API Error: ${errorText}`, 'error');
+                        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+                    }
+                } catch (error) {
+                    debugLog(`Network Error: ${error.message}`, 'error');
+                    console.error('Error sending edit command:', error);
+                    showNotification('❌ เกิดข้อผิดพลาดในการส่งข้อมูล: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function previewEdit() {
+            const editCommand = document.getElementById('editCommand').value.trim();
+            
+            if (!editCommand) {
+                showNotification('⚠️ กรุณาใส่คำสั่งแก้ไขก่อน', 'error');
+                return;
+            }
+
+            showNotification('👁️ กำลังสร้างตัวอย่างการแก้ไข...', 'info');
+            
+            // Simulate preview generation
+            setTimeout(() => {
+                let previewText = `📄 ตัวอย่างการแก้ไข:\n\nคำสั่ง: "${editCommand}"\n\n`;
+                
+                if (editCommand.includes('เปลี่ยนชื่อผู้รับ')) {
+                    previewText += `❌ เดิม: ผู้รับบริการ: นายสมศักดิ์ ใจดี\n✅ ใหม่: ผู้รับบริการ: นายสมชาย ใจดี`;
+                } else if (editCommand.includes('มูลค่า')) {
+                    previewText += `❌ เดิม: มูลค่าสัญญา: 500,000 บาท\n✅ ใหม่: มูลค่าสัญญา: 750,000 บาท`;
+                } else if (editCommand.includes('ระยะเวลา')) {
+                    previewText += `❌ เดิม: ระยะเวลา: 12 เดือน\n✅ ใหม่: ระยะเวลา: 18 เดือน`;
+                } else {
+                    previewText += `การแก้ไขจะดำเนินการตามคำสั่งที่ระบุ`;
+                }
+                
+                alert(previewText);
+            }, 1000);
+        }
+
+        function saveAsDraft() {
+            const editCommand = document.getElementById('editCommand').value.trim();
+            
+            if (!editCommand) {
+                showNotification('⚠️ ไม่มีเนื้อหาให้บันทึก', 'error');
+                return;
+            }
+
+            showNotification('💾 บันทึกร่างเรียบร้อยแล้ว', 'success');
+            addToHistory(`บันทึกร่าง: ${editCommand.substring(0, 50)}${editCommand.length > 50 ? '...' : ''}`);
+            
+            const statusBadge = document.getElementById('docStatus');
+            statusBadge.textContent = 'มีร่างที่บันทึก';
+            statusBadge.style.background = '#d1ecf1';
+            statusBadge.style.color = '#0c5460';
+        }
+
+        // Load document data on page load
+        document.addEventListener('DOMContentLoaded', async function() {
+            showNotification('📄 โหลดเอกสารเรียบร้อยแล้ว', 'success');
+            debugLog('Document editor initialized', 'info');
+            
+            // Try to load document data
+            try {
+                debugLog('Attempting to load document data...', 'info');
+                const response = await fetch('http://localhost:8080/api/document/1');
+                if (response.ok) {
+                    const docData = await response.json();
+                    debugLog(`Document data loaded: ${JSON.stringify(docData)}`, 'success');
+                    console.log('Document data:', docData);
+                } else {
+                    debugLog(`Could not load document data: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                debugLog(`Error loading document data: ${error.message}`, 'error');
+                console.log('Could not load document data:', error.message);
+            }
+        });
+
+        // Auto-save feature
+        let autoSaveTimeout;
+        document.getElementById('editCommand').addEventListener('input', function() {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                if (this.value.trim()) {
+                    debugLog('Auto-saving draft...', 'info');
+                    // Auto-save logic here
+                }
+            }, 3000); // Auto-save after 3 seconds of inactivity
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                submitEdit();
+            } else if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                saveAsDraft();
+            }
+        });
+    </script>
+</body>
+</html>
