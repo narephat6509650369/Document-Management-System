@@ -1,11 +1,11 @@
-📄 Document Management System (University Project)
+# 📄 Document Management System (University Project)
 This is a collaborative project developed during my 3rd year at university as part of a two-person team. The system focuses on key document management functionalities such as searching, access requests, signing, and editing documents. It features a user-friendly interface that connects seamlessly to a MySQL database.
 
-🛠 My Contributions:
+# 🛠 My Contributions:
 Developed document signing and editing services using Spring Boot (RESTful APIs).
 
 
-🧰 Technologies Used:
+# 🧰 Technologies Used:
 Java + Spring Boot (REST APIs)
 
 MySQL
